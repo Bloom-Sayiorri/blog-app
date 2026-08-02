@@ -20,3 +20,28 @@
 3. Search
 4. Pagination
 5. Buttons
+
+A typical blog could have these pages:
+- Public
+🏠 Home
+📚 All Posts
+📄 Single Post
+📂 Categories
+🏷️ Tags
+ℹ️ About
+✉️ Contact (recommended)
+- Authentication
+Login
+Register
+Forgot Password (optional)
+- User
+Profile
+My Posts (if multiple authors)
+- Admin
+Dashboard
+Create Post
+Edit Post
+Manage Categories
+Manage Tags
+Manage Comments
+Manage Users (optional)

@@ -8,7 +8,6 @@ export type User = {
 }
 
 export type Blog = {
+    id: string;
     title: string;
-    category: string;
-    content: string;
 }

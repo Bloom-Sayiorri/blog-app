@@ -1,6 +1,6 @@
 "use client"
 
-export default function Navbar() {
+export default function Search() {
     return (
         <div></div>
     );
