@@ -1,6 +1,6 @@
 export type User = {
     username: string;
-    eamil: string;
+    email: string;
     password: string;
     age: number;
     avatar: string;

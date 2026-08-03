@@ -7,11 +7,11 @@ import { compare } from "bcrypt";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-    adapter: PrismaAdapter(prisma),
+	adapter: PrismaAdapter(prisma),
 	providers: [
 		GitHub({ clientId: process.env.GITHUB_ID!, clientSecret: process.env.GITHUB_SECRET! }),
 		Google({ clientId: process.env.GOOGLE_CLIENT_ID!, clientSecret: process.env.GOOGLE_CLIENT_SECRET! }),
-        CredentialsProvider({
+		CredentialsProvider({
 			name: "Credentials",
 
 			credentials: {
@@ -61,6 +61,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		async jwt({ token, user }) {
 			if (user) {
 				token.id = user.id;
+				token.role = user.role;
 			}
 
 			return token;
@@ -69,6 +70,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		async session({ session, token }) {
 			if (session.user) {
 				session.user.id = token.id as string;
+				session.user.role = token.role as "USER" | "ADMIN";
 			}
 
 			return session;
