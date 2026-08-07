@@ -8,16 +8,22 @@ import { revalidatePath } from "next/cache";
 export async function createComment(formData: FormData) {
 	const session = await auth();
 
-	if (!session?.user?.id) {
+	if (!session?.user.id) {
 		return {
 			success: false,
-			message: "Please sign in to comment.",
+			message: "Please login to continue.",
+		};
+	}
+
+	if (session?.user.role !== "ADMIN") {
+		return {
+			success: false,
+			message: "Unauthorized access. Only admins can perform this action.",
 		};
 	}
 
 	const validation = CommentSchema.safeParse({
 		content: formData.get("content"),
-		postId: formData.get("postId"),
 	});
 
 	if (!validation.success) {
@@ -27,7 +33,8 @@ export async function createComment(formData: FormData) {
 		};
 	}
 
-	const { content, postId } = validation.data;
+	const { content } = validation.data;
+	const postId = formData.get("postId") as string;
 
 	try {
 		const comment = await prisma.comment.create({
@@ -107,17 +114,35 @@ export async function getComments(postId: string) {
 	}
 }
 
-export async function updateComment(commentId: string, formData: FormData) {
+export async function updateComment(formData: FormData) {
 	const session = await auth();
 
-	if (!session?.user?.id) {
+	if (!session?.user.id) {
 		return {
 			success: false,
-			message: "Unauthorized.",
+			message: "Please login to continue.",
 		};
 	}
 
-	const content = formData.get("content") as string;
+	if (session?.user.role !== "ADMIN") {
+		return {
+			success: false,
+			message: "Unauthorized access. Only admins can perform this action.",
+		};
+	}
+	const validation = CommentSchema.safeParse({
+		content: formData.get("content"),
+	});
+
+	if (!validation.success) {
+		return {
+			success: false,
+			errors: validation.error.flatten().fieldErrors,
+		};
+	}
+
+	const { content } = validation.data;
+	const commentId = formData.get("content") as string;
 
 	try {
 		const comment = await prisma.comment.findUnique({
@@ -130,13 +155,6 @@ export async function updateComment(commentId: string, formData: FormData) {
 			return {
 				success: false,
 				message: "Comment not found.",
-			};
-		}
-
-		if (comment.userId !== session.user.id) {
-			return {
-				success: false,
-				message: "You are not allowed to edit this comment.",
 			};
 		}
 
@@ -173,7 +191,14 @@ export async function deleteComment(commentId: string) {
 	if (!session?.user?.id) {
 		return {
 			success: false,
-			message: "Unauthorized.",
+			message: "Please login to continue.",
+		};
+	}
+
+	if (session?.user.role !== "ADMIN") {
+		return {
+			success: false,
+			message: "Unauthorized access. Only admins can perform this action.",
 		};
 	}
 
@@ -188,13 +213,6 @@ export async function deleteComment(commentId: string) {
 			return {
 				success: false,
 				message: "Comment not found.",
-			};
-		}
-
-		if (comment.userId !== session.user.id) {
-			return {
-				success: false,
-				message: "You are not allowed to delete this comment.",
 			};
 		}
 

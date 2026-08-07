@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { put } from "@vercel/blob";
 import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
 
 export async function createUser(formData: FormData) {
 	const username = formData.get("username") as string;
@@ -41,7 +42,7 @@ export async function createUser(formData: FormData) {
 		const { password: _, ...safeUser } = user;
 		return {
 			success: true,
-			message: "User creared successfully",
+			message: "User created successfully.",
 			data: safeUser,
 		};
 	} catch (error: any) {
@@ -53,7 +54,7 @@ export async function createUser(formData: FormData) {
 			};
 		}
 		console.error(error);
-		return { error: "There was a problem signing in!" };
+		return { success: false, message: "There was a problem signing in!" };
 	}
 }
 
@@ -98,7 +99,47 @@ export async function updateUser(formData: FormData) {
 	}
 }
 
+export async function getUsers() {
+	const session = await auth();
+	if (!session?.user.id) {
+		return { success: false, message: "Please login to continue." };
+	}
+	if (session?.user.role !== "ADMIN") {
+		return { success: false, message: "Only admins can perform thia action." };
+	}
+	try {
+	const users = await prisma.user.findMany({
+		select: {
+			id: true,
+			username: true,
+			email: true,
+			avatar: true,
+			role: true,
+			createdAt: true,
+			_count: {
+				select: {
+					posts: true,
+					comments: true,
+					likes: true,
+				},
+			},
+		},
+	});
+	if (!users) {
+		return { success: false, message: "Users not found." };
+	}
+	return { success: true, message: " Users retrieved successfully.", data: users };
+	} catch (error) {
+		console.error(error);
+		return { success: false, message: "Failed to retreive users. "};
+	}
+}
+
 export async function getUser(id: string) {
+	const session = await auth();
+	if(!session?.user.id) {
+		return { success: false, message: "Please login to continue." };
+	}
 	try {
 		const user = await prisma.user.findUnique({
 			where: { id },
@@ -120,10 +161,10 @@ export async function getUser(id: string) {
 }
 
 export async function deleteUser(id: string) {
-    const session = await auth();
-    if(!session?.user?.id || session.user.role !== "ADMIN") {
-        return { success: false, message: "Unauthorized!" };
-    }
+	const session = await auth();
+	if (!session?.user.id || session.user.role !== "ADMIN") {
+		return { success: false, message: "Unauthorized!" };
+	}
 	try {
 		await prisma.user.delete({
 			where: { id },

@@ -3,25 +3,15 @@
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { generateSlug } from "@/utils/slug";
+import { CreatePostSchema, UpdatePostSchema } from "@/validators/post";
 import { put } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
-
-const CreatePostSchema = z.object({
-	title: z.string().min(5),
-	content: z.string().min(10),
-	excerpt: z.string().optional().nullable(),
-	categoryId: z.string().optional().nullable(),
-});
 
 export async function createPost(formData: FormData) {
 	const session = await auth();
 
-	if (!session?.user?.id) {
-		return {
-			success: false,
-			message: "Unauthorized.",
-		};
+	if (!session?.user.id) {
+		return { success: false, message: "Please login to continue." };
 	}
 
 	const imageFile = formData.get("coverImage") as File;
@@ -32,7 +22,6 @@ export async function createPost(formData: FormData) {
 		const blob = await put(`blog-covers/${Date.now()}-${imageFile.name}`, imageFile, {
 			access: "public",
 		});
-
 		coverImageUrl = blob.url;
 	}
 
@@ -44,10 +33,7 @@ export async function createPost(formData: FormData) {
 	});
 
 	if (!validation.success) {
-		return {
-			success: false,
-			errors: validation.error.flatten().fieldErrors,
-		};
+		return { success: false, errors: validation.error.flatten().fieldErrors };
 	}
 
 	const { title, content, excerpt, categoryId } = validation.data;
@@ -62,13 +48,11 @@ export async function createPost(formData: FormData) {
 				content,
 				excerpt,
 				coverImage: coverImageUrl,
-
 				author: {
 					connect: {
 						id: session.user.id,
 					},
 				},
-
 				...(categoryId && {
 					category: {
 						connect: {
@@ -89,46 +73,198 @@ export async function createPost(formData: FormData) {
 			},
 		});
 
-		revalidatePath("/blog");
+		revalidatePath("/posts");
 
 		return {
 			success: true,
 			message: "Post created successfully.",
 			data: post,
 		};
-	} catch (error: any) {
-		if (error.code === "P2002") {
-			return {
-				success: false,
-				message: "A post with this slug already exists.",
-			};
-		}
-
+	} catch (error) {
 		console.error(error);
-
-		return {
-			success: false,
-			message: "Failed to create post.",
-		};
+		return { success: false, message: "Failed to create post." };
 	}
 }
 
-export async function editPost(postId: string) {}
+export async function getPost(id: string) {
+	const session = await auth();
+	if (!session?.user.id || session?.user.role !== "ADMIN") {
+		return { success: false, message: "Please login to continue." };
+	}
+	try {
+		const post = await prisma.post.findUnique({
+			where: { id },
+			select: {
+				id: true,
+				title: true,
+				slug: true,
+				content: true,
+				excerpt: true,
+				coverImage: true,
+				published: true,
+				createdAt: true,
+				author: {
+					select: {
+						id: true,
+						username: true,
+						avatar: true,
+					},
+				},
+				category: {
+					select: {
+						id: true,
+						name: true,
+						slug: true,
+					},
+				},
+				tags: {
+					include: {
+						tag: true,
+					},
+				},
+				comments: {
+					include: {
+						user: {
+							select: {
+								id: true,
+								username: true,
+								avatar: true,
+							},
+						},
+					},
+				},
+				_count: {
+					select: {
+						likes: true,
+						comments: true,
+					},
+				},
+			},
+		});
+		if (!post) {
+			return { success: false, message: "Post does not exist." };
+		}
+
+		return { success: true, message: "Post retrieved succesfully.", data: post };
+	} catch (error) {
+		console.error(error);
+		return { success: false, message: "Failed to retreive post" };
+	}
+}
+
+export async function getPosts() {
+	try {
+		const posts = await prisma.post.findMany({
+			select: {
+				id: true,
+				title: true,
+				slug: true,
+				coverImage: true,
+				excerpt: true,
+				author: {
+					select: {
+						id: true,
+						username: true,
+						avatar: true,
+					},
+				},
+				category: {
+					select: {
+						name: true,
+					},
+				},
+				_count: {
+					select: {
+						likes: true,
+						comments: true,
+					},
+				},
+			},
+		});
+		if (!posts) {
+			return { success: false, message: "Failed to retireve posts." };
+		}
+
+		return { success: true, message: "Posts retrieved successfully.", data: posts };
+	} catch (error) {
+		console.error(error);
+		return { success: false, message: "Failed to retrieve posts." };
+	}
+}
+
+export async function updatePost(formData: FormData) {
+	const session = await auth();
+
+	const postData = UpdatePostSchema.safeParse({
+		title: formData.get("title") as string,
+		content: formData.get("content") as string,
+		excerpt: formData.get("excerpt") as string,
+		published: formData.get("published") === "true",
+	});
+	if (!postData.success) {
+		return { success: false, error: postData.error.flatten().fieldErrors };
+	}
+	const id = formData.get("id");
+
+	if (!id || typeof id !== "string") {
+		return { success: false, message: "Invalid post id." };
+	}
+	const existingPost = await prisma.post.findUnique({
+		where: { id },
+		select: { authorId: true },
+	});
+
+	if (!existingPost) {
+		return { success: false, message: "Post not found." };
+	}
+	if (existingPost.authorId !== session?.user.id) {
+		return { success: false, message: "You do not have persmission to perform this action." };
+	}
+	const { title, content, excerpt, published } = postData.data;
+
+	const slug = generateSlug(title);
+
+	try {
+		const post = await prisma.post.update({
+			where: { id },
+			data: { title, slug, content, excerpt, published },
+		});
+		revalidatePath("/posts");
+		revalidatePath(`/posts/${post.slug}`);
+		revalidatePath("/dashboard/posts");
+		return { success: true, message: "Post updated successfully.", data: post };
+	} catch (error) {
+		console.error(error);
+		return { success: false, message: "Failed to update post." };
+	}
+}
 
 export async function deletePost(postId: string) {
-	// const session = await getSession();
-	// if(!session?.user?.id) return { error: "Unauthorized" };
+	const session = await auth();
+	const existingPost = await prisma.post.findUnique({
+		where: { id: postId },
+		select: { authorId: true },
+	});
+
+	if (!existingPost) {
+		return { success: false, message: "Post not found." };
+	}
+	if (!session?.user.id) {
+		return { success: false, message: "Please login to continue." };
+	}
+	if (existingPost.authorId !== session?.user.id && session.user.role !== "ADMIN") {
+		return { success: false, message: "You do not have persmission to perform this action." };
+	}
 	try {
 		await prisma.post.delete({
 			where: {
 				id: postId,
-				// authorId: session.user.id,
 			},
 		});
 		revalidatePath("/posts");
-		return { success: true };
-	} catch (error: any) {
-		return { error: `Failed to delete post in database. ${error}` };
+		revalidatePath("/dashboard/posts");
+		return { success: true, message: "Post deleted successfully." };
+	} catch (error) {
+		return { success: false, message: "Failed to delete post in database" };
 	}
 }
-

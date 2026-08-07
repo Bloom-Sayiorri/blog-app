@@ -2,58 +2,101 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { ContactSchema } from "@/validators/contact";
+import { auth } from "@/auth";
 
-export async function createContactMessage(data: { name: string; email: string; subject: string; message: string }) {
-	if (!data.name || !data.email || !data.message || !data.subject) {
-		return { success: false, message: "Validation failed", error: "All fieds are required" };
+export async function createContactMessage(formData: FormData) {
+	const messageData = ContactSchema.safeParse({
+		name: formData.get("name") as string,
+		email: formData.get("email") as string,
+		subject: formData.get("subject") as string,
+		message: formData.get("message") as string,
+	});
+
+	if (!messageData.success) {
+		return { success: false, error: messageData.error.flatten().fieldErrors };
 	}
+	const { name, email, subject, message } = messageData.data;
+
 	try {
 		const contact = await prisma.contact.create({
-			data,
+			data: { name, email, subject, message },
 		});
-
-		return {
-			success: true,
-			message: "Contact details submitted successfully",
-			data: contact,
-		};
+		revalidatePath("/admin/messages");
+		return { success: true, message: "Contact message submitted successfully.", data: contact };
 	} catch (error) {
 		console.error(error);
-		return {
-			success: false,
-			message: "Failed to send message.",
-			error: "Internal server error",
-		};
+		return { success: false, message: "Failed to send message." };
 	}
 }
 
 export async function getContactMessages() {
+	const session = await auth();
+	if (!session?.user.id || session?.user.role !== "ADMIN") {
+		return {
+			success: false,
+			message: "Only administrators can perform this action.",
+		};
+	}
+	
 	try {
-		return await prisma.contact.findMany({
+		const contactMessages = await prisma.contact.findMany({
 			orderBy: {
 				createdAt: "desc",
 			},
 		});
+		return { success: true, message: "Contact messages retrieved successfully.", data: contactMessages };
 	} catch (error) {
 		console.error(error);
-		return [];
+		return { success: false, message: "Failed to retrieve contact messages." };
 	}
 }
 
 export async function getContactMessage(id: string) {
+	const session = await auth();
+
+	if (!session?.user?.id) {
+		return {
+			success: false,
+			message: "Please sign in to continue.",
+		};
+	}
+
+	if (session.user.role !== "ADMIN") {
+		return {
+			success: false,
+			message: "Only administrators can perform this action.",
+		};
+	}
 	try {
-		return await prisma.contact.findUnique({
+		const contactMessage = await prisma.contact.findUnique({
 			where: {
 				id,
 			},
 		});
+		return { success: true, message: "Contact messages retrieved successfully.", data: contactMessage };
 	} catch (error) {
 		console.error(error);
-		return null;
+		return { success: false, message: "Failed to retrieve contact message." };
 	}
 }
 
 export async function markMessageAsRead(id: string) {
+	const session = await auth();
+
+	if (!session?.user?.id) {
+		return {
+			success: false,
+			message: "Please sign in to continue.",
+		};
+	}
+
+	if (session.user.role !== "ADMIN") {
+		return {
+			success: false,
+			message: "Only administrators can perform this action.",
+		};
+	}
 	try {
 		await prisma.contact.update({
 			where: {
@@ -64,13 +107,30 @@ export async function markMessageAsRead(id: string) {
 			},
 		});
 		revalidatePath("/admin/messages");
+		return { success: true, message: "Contact messages marked as read." };
 	} catch (error) {
 		console.error(error);
-		return null;
+		return { success: false, message: "Failed to mark contact message as read." };
 	}
 }
 
 export async function deleteContactMessage(id: string) {
+	const session = await auth();
+
+	if (!session?.user?.id) {
+		return {
+			success: false,
+			message: "Please sign in to continue.",
+		};
+	}
+
+	if (session.user.role !== "ADMIN") {
+		return {
+			success: false,
+			message: "Only administrators can perform this action.",
+		};
+	}
+
 	try {
 		await prisma.contact.delete({
 			where: {
@@ -78,15 +138,13 @@ export async function deleteContactMessage(id: string) {
 			},
 		});
 		revalidatePath("/admin/messages");
-		return {
-			success: true,
-		};
+		return { success: true, message: "Contact message deleted successfully." };
 	} catch (error) {
 		console.error(error);
-
-		return {
-			success: false,
-			message: "Failed to delete message.",
-		};
+		return { success: false, message: "Failed to delete message." };
 	}
 }
+
+
+
+
