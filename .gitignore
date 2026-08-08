@@ -41,5 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 /generated/prisma
-/lib/data.ts
-/app/actions
+/utils/data.ts
+
+ARCHITECTURE.md
+# /app/(routes)/
