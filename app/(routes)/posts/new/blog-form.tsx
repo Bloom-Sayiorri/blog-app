@@ -1,6 +1,6 @@
 "use client";
 
-import { createPost } from "@/app/actions/posts";
+import { createPost } from "@/app/actions/post";
 
 export default function Blogform() {
 	const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
