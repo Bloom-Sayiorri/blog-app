@@ -57,5 +57,4 @@ export async function getTag(id: string) {
         console.error(error);
         return { success: false, message: "Failed to retrieve tag." };
     }
-
 }

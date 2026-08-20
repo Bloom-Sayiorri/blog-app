@@ -3,10 +3,10 @@ import prisma from "@/lib/prisma";
 
 export async function getContactMessages() {
     const session = await auth();
-    if (!session?.user.id || session?.user.role !== "ADMIN") {
+    if (!session?.user?.id || session.user.role !== "ADMIN") {
         return {
             success: false,
-            message: "Only administrators can perform this action.",
+            message: "Only admins can perform this action.",
         };
     }
     
@@ -26,10 +26,10 @@ export async function getContactMessages() {
 export async function getContactMessage(id: string) {
     const session = await auth();
 
-    if (!session?.user?.id) {
+    if (!session?.user?.id || session.user.role !== "ADMIN") {
         return {
             success: false,
-            message: "Please sign in to continue.",
+            message: "Only admins can perform this action.",
         };
     }
 
@@ -50,5 +50,4 @@ export async function getContactMessage(id: string) {
         console.error(error);
         return { success: false, message: "Failed to retrieve contact message." };
     }
-
 }

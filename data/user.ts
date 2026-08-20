@@ -37,7 +37,7 @@ export async function getUsers() {
 	}
 }
 
-export async function getUser(id: string) {
+export async function getMe(id: string) {
 	const session = await auth();
 	if (!session?.user.id) {
 		return { success: false, message: "Please login to continue." };
@@ -55,10 +55,12 @@ export async function getUser(id: string) {
 				createdAt: true,
 			},
 		});
+		if(!user) {
+			return { success: false, message:"User not found." };
+		}
 		return { success: true, message: "User found successfully!", data: user };
 	} catch (error) {
 		console.error(error);
 		return { error: "User does not exist!" };
 	}
-
 }

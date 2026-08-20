@@ -3,9 +3,10 @@ import prisma from "@/lib/prisma";
 
 export async function getPost(id: string) {
 	const session = await auth();
-	if (!session?.user.id || session?.user.role !== "ADMIN") {
+	if (!session?.user?.id) {
 		return { success: false, message: "Please login to continue." };
 	}
+
 	try {
 		const post = await prisma.post.findUnique({
 			where: { id },
@@ -105,6 +106,4 @@ export async function getPosts() {
 		console.error(error);
 		return { success: false, message: "Failed to retrieve posts." };
 	}
-
-
 }

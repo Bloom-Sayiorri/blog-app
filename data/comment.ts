@@ -29,6 +29,10 @@ export async function getComments(postId: string) {
 				createdAt: "desc",
 			},
 		});
+		
+		if(!comments) {
+			return { success: false, message: "Comments not found." };
+		}
 
 		return {
 			success: true,
