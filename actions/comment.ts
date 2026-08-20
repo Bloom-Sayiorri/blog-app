@@ -79,41 +79,6 @@ export async function createComment(formData: FormData) {
 	}
 }
 
-export async function getComments(postId: string) {
-	try {
-		const comments = await prisma.comment.findMany({
-			where: {
-				postId,
-			},
-			include: {
-				user: {
-					select: {
-						id: true,
-						username: true,
-						avatar: true,
-					},
-				},
-			},
-			orderBy: {
-				createdAt: "desc",
-			},
-		});
-
-		return {
-			success: true,
-			message: "Comments retrieved successfully.",
-			data: comments,
-		};
-	} catch (error) {
-		console.error(error);
-
-		return {
-			success: false,
-			message: "Failed to retrieve comments.",
-		};
-	}
-}
-
 export async function updateComment(formData: FormData) {
 	const session = await auth();
 
@@ -124,12 +89,6 @@ export async function updateComment(formData: FormData) {
 		};
 	}
 
-	if (session?.user.role !== "ADMIN") {
-		return {
-			success: false,
-			message: "Unauthorized access. Only admins can perform this action.",
-		};
-	}
 	const validation = CommentSchema.safeParse({
 		content: formData.get("content"),
 	});
@@ -157,7 +116,13 @@ export async function updateComment(formData: FormData) {
 				message: "Comment not found.",
 			};
 		}
-
+		const isOwner = comment.userId === session.user.id;
+		if(!isOwner || session.user.role !== "ADMIN") {
+			return {
+				success: false,
+				message: "Please login to continue.",
+			};
+		}
 		const updatedComment = await prisma.comment.update({
 			where: {
 				id: commentId,
@@ -195,13 +160,6 @@ export async function deleteComment(commentId: string) {
 		};
 	}
 
-	if (session?.user.role !== "ADMIN") {
-		return {
-			success: false,
-			message: "Unauthorized access. Only admins can perform this action.",
-		};
-	}
-
 	try {
 		const comment = await prisma.comment.findUnique({
 			where: {
@@ -213,6 +171,14 @@ export async function deleteComment(commentId: string) {
 			return {
 				success: false,
 				message: "Comment not found.",
+			};
+		}
+
+		const isOwner = comment.userId === session.user.id;
+		if (!isOwner || session.user.role !== "ADMIN") {
+			return {
+				success: false,
+				message: "Unauthorized access. Only admins can perform this action.",
 			};
 		}
 
@@ -236,4 +202,6 @@ export async function deleteComment(commentId: string) {
 			message: "Failed to delete comment.",
 		};
 	}
+
+
 }
