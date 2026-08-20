@@ -47,7 +47,7 @@ export async function markMessageAsRead(id: string) {
 		};
 	}
 	try {
-		await prisma.contact.update({
+		const message = await prisma.contact.update({
 			where: {
 				id,
 			},
@@ -55,6 +55,9 @@ export async function markMessageAsRead(id: string) {
 				isRead: true,
 			},
 		});
+		if (!message) {
+			return { success: false, message: "Message not found." };
+		}
 		revalidatePath("/admin/messages");
 		return { success: true, message: "Contact messages marked as read." };
 	} catch (error) {
@@ -81,15 +84,19 @@ export async function deleteContactMessage(id: string) {
 	}
 
 	try {
-		await prisma.contact.delete({
+		const message = await prisma.contact.delete({
 			where: {
 				id,
 			},
 		});
+		if(!message) {
+			return { success: false, message: "Message not found." };
+		}
 		revalidatePath("/admin/messages");
 		return { success: true, message: "Contact message deleted successfully." };
 	} catch (error) {
 		console.error(error);
 		return { success: false, message: "Failed to delete message." };
 	}
+
 }

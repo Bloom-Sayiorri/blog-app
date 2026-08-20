@@ -10,7 +10,7 @@ import { revalidatePath } from "next/cache";
 export async function createPost(formData: FormData) {
 	const session = await auth();
 
-	if (!session?.user.id) {
+	if (!session?.user?.id) {
 		return { success: false, message: "Please login to continue." };
 	}
 
@@ -90,6 +90,9 @@ export async function createPost(formData: FormData) {
 export async function updatePost(formData: FormData) {
 	const session = await auth();
 
+	if (!session?.user?.id) {
+		return { success: false, message: "Please login to continue." };
+	}
 	const postData = UpdatePostSchema.safeParse({
 		title: formData.get("title") as string,
 		content: formData.get("content") as string,
@@ -136,6 +139,9 @@ export async function updatePost(formData: FormData) {
 
 export async function deletePost(postId: string) {
 	const session = await auth();
+	if (!session?.user?.id) {
+		return { success: false, message: "Please login to continue." };
+	}
 	const existingPost = await prisma.post.findUnique({
 		where: { id: postId },
 		select: { authorId: true },

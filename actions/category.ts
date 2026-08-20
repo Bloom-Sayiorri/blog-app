@@ -9,7 +9,7 @@ import { revalidatePath } from "next/cache";
 export async function createCategory(formData: FormData) {
 	const session = await auth();
 
-	if (!session?.user.id || session?.user.role !== "ADMIN") {
+	if (!session?.user?.id || session.user.role !== "ADMIN") {
 		return { success: false, message: "Unathorized access." };
 	}
 	const validCategory = CategorySchema.safeParse({
@@ -42,7 +42,7 @@ export async function createCategory(formData: FormData) {
 export async function updateCategory(formData: FormData) {
 	const session = await auth();
 
-	if (!session?.user.id || session?.user.role !== "ADMIN") {
+	if (!session?.user?.id || session?.user.role !== "ADMIN") {
 		return { success: false, message: "Unathorized access." };
 	}
 
@@ -56,10 +56,14 @@ export async function updateCategory(formData: FormData) {
 		return { success: false, message: "Category not found." };
 	}
     try {
-        await prisma.category.update({
+        const category = await prisma.category.update({
             where: { id: existingCategory.id },
             data: categoryData,
         });
+
+		if(!category) {
+			return { success: false, message: "Category not found." };
+		}
 
 		revalidatePath("/categories");
 		revalidatePath("/posts");
@@ -75,13 +79,16 @@ export async function updateCategory(formData: FormData) {
 
 export async function deleteCategory(categoryId: string) {
 	const session = await auth();
-	if (!session?.user.id || session?.user.role !== "ADMIN") {
+	if (!session?.user?.id || session?.user.role !== "ADMIN") {
 		return { success: false, message: "Unauthorized access." };
 	}
 	try {
-		await prisma.category.delete({
+		const category = await prisma.category.delete({
 			where: { id: categoryId },
 		});
+		if(!category) {
+			return { success: false, message: "Category not found." };
+		}
 
 		revalidatePath("/categories");
 		revalidatePath("/posts");

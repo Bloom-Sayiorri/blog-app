@@ -8,17 +8,10 @@ import { revalidatePath } from "next/cache";
 export async function createComment(formData: FormData) {
 	const session = await auth();
 
-	if (!session?.user.id) {
+	if (!session?.user?.id) {
 		return {
 			success: false,
 			message: "Please login to continue.",
-		};
-	}
-
-	if (session?.user.role !== "ADMIN") {
-		return {
-			success: false,
-			message: "Unauthorized access. Only admins can perform this action.",
 		};
 	}
 
@@ -202,6 +195,4 @@ export async function deleteComment(commentId: string) {
 			message: "Failed to delete comment.",
 		};
 	}
-
-
 }

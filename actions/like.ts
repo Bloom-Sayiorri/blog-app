@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 export async function toggleLikes(postId: string) {
     const session = await auth();
-    if(!session?.user.id) {
+    if(!session?.user?.id) {
         return { success: false, message: "Please login to continue." };
     };
     const existingPost = await prisma.post.findUnique({

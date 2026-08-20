@@ -48,7 +48,7 @@ export async function createTag(formData: FormData) {
 export async function updateTag(formData: FormData) {
 	const session = await auth();
 
-	if (!session?.user.id || session.user.role !== "ADMIN") {
+	if (!session?.user?.id || session.user.role !== "ADMIN") {
 		return { success: false, message: "Unauthorized." };
 	}
 
@@ -75,8 +75,12 @@ export async function updateTag(formData: FormData) {
 				slug,
 			},
 		});
+		if(!tag) {
+			return { success: false, message: "Tag not found." };
+		}
 
 		revalidatePath("/admin/tags");
+		revalidatePath("/posts");
 
 		return { success: true, message: "Tag updated successfully.", data: tag };
 	} catch (error: any) {
