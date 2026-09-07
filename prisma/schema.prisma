@@ -30,8 +30,9 @@ model Post {
   likes    Like[]
   tags     PostTag[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  bookmarks Bookmark[]
 }
 
 model Category {
@@ -84,6 +85,18 @@ model Like {
   @@id([userId, postId])
 }
 
+model Bookmark {
+  id     String @id @default(cuid())
+  postId String
+  userId String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+}
+
 model Contact {
   id      String @id @default(cuid())
   name    String
@@ -98,20 +111,21 @@ model Contact {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  username  String?   @unique
-  email     String    @unique
+  id        String     @id @default(cuid())
+  username  String?    @unique
+  email     String     @unique
   password  String?
   avatar    String?
   bio       String?
-  role      Role      @default(USER)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  role      Role       @default(USER)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   accounts  Account[]
   sessions  Session[]
   posts     Post[]
   comments  Comment[]
   likes     Like[]
+  bookmarks Bookmark[]
 }
 
 model Account {
