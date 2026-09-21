@@ -115,7 +115,7 @@ model User {
   username  String?    @unique
   email     String     @unique
   password  String?
-  avatar    String?
+  image    String?
   bio       String?
   role      Role       @default(USER)
   createdAt DateTime   @default(now())
