@@ -1,5 +1,8 @@
-import { auth } from "@/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 import { NextResponse } from "next/server";
+
+const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
 	const { pathname } = req.nextUrl;
@@ -7,6 +10,11 @@ export default auth((req) => {
 
 	// Protect dashboard routes
 	if (pathname.startsWith("/dashboard") && !user) {
+		return NextResponse.redirect(new URL("/login", req.url));
+	}
+
+	// Protect unauthenticated admin user
+	if (pathname.startsWith("/admin") && !user) {
 		return NextResponse.redirect(new URL("/login", req.url));
 	}
 
