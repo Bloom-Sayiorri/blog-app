@@ -3,13 +3,12 @@
 import { signIn } from "@/auth";
 import bcrypt from "bcrypt";
 import prisma from "@/lib/prisma";
-import { LoginSchema } from "@/validators/auth";
 import { AuthError } from "next-auth";
+import { LoginSchema } from "@/validators/auth";
 import { SignupSchema } from "@/validators/auth";
 
 export type SignupState = {
-	success: boolean;
-	error?: string;
+	success?: boolean;
 	errors?: {
 		username?: string[];
 		email?: string[];
@@ -52,7 +51,7 @@ export async function signup(prevState: SignupState, formData: FormData) {
 
 				return {
 					success: false,
-					error: `A user with that ${target.includes("email") ? "email" : "username"} already exists.`,
+					message: `A user with that ${target.includes("email") ? "email" : "username"} already exists.`,
 				};
 			}
 		console.error(error);
@@ -61,7 +60,7 @@ export async function signup(prevState: SignupState, formData: FormData) {
 }
 
 export type LoginState = {
-	success: boolean;
+	success?: boolean;
 	errors?: {
 		email?: string[];
 		password?: string[];

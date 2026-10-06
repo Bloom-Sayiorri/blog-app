@@ -8,6 +8,18 @@ export default auth((req) => {
 	const { pathname } = req.nextUrl;
 	const user = req.auth?.user;
 
+	// Protect public routes
+	if (
+		pathname === "/" ||
+		pathname.startsWith("/posts") ||
+		pathname.startsWith("/about") ||
+		pathname.startsWith("/contact") ||
+		pathname.startsWith("/login") ||
+		pathname.startsWith("/signup")
+	) {
+		return NextResponse.next();
+	}
+
 	// Protect dashboard routes
 	if (pathname.startsWith("/dashboard") && !user) {
 		return NextResponse.redirect(new URL("/login", req.url));
