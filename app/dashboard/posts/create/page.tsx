@@ -1,4 +1,4 @@
-export default function SignupForm() {
+export default function Page() {
     return (
         <div></div>
     );

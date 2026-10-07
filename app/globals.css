@@ -1,26 +1,63 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+	--creamy-bg: #f7f3e9;
+	--background: #f9fbfc;
+	--text-dark: #0a0a0a;
+	--text-light: #eeeeee;
+	--secondary-button: #e9ecef;
+	--olive-green: #606c38;
+	--black: #283618;
+	--cornsilk: #fefae0;
+	--light-caramel: #dda15e;
+	--copper: #bc6c25;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+	--color-bg: var(--background);
+	--color-text-light: var(--text-light);
+	--color-text-dark: var(--text-dark);
+	--font-sans: var(--font-geist-sans);
+	--font-mono: var(--font-geist-mono);
+}
+
+@utility contact-input {
+	@apply bg-transparent text-white border border-gray-500 rounded-[50px] px-[1.8rem] py-4;
+	font-family: var(--font-sans);
+}
+
+@layer base {
+	*,
+	*::before,
+	*::after {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+	}
+
+	html,
+	body {
+		overflow-x: hidden;
+	}
+
+	body {
+		background-color: var(--background);
+		color: var(--text);
+		font-family: Arial, Helvetica, sans-serif;
+		font-size: medium;
+		font-weight: 400;
+		line-height: 1.5;
+		font-synthesis: none;
+		scroll-behavior: smooth;
+		text-rendering: optimizeLegibility;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+	:root {
+		--bg: #0a0a0a;
+		--text: #f7f3e9;
+	}
 }
