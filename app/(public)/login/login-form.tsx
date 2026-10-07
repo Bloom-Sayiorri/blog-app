@@ -16,36 +16,21 @@ export default function LoginForm() {
 	const initialState: LoginState = { errors: {}, message: null };
 	const [state, formAction, isPending] = useActionState(login, initialState);
 
-	const handleGoogleLogin = async () => {
-		await signIn("google", { callbackUrl });
-	};
-
-	const handleGithubLogin = async () => {
-		await signIn("github", { callbackUrl });
-	};
-
 	return (
 		<form action={formAction} className="w-full flex flex-col justify-center items-center bg-slate-200/70 rounded-lg">
-			<h2 className="text-3xl">Login</h2>
-			<p className="font-bold text-md md:text-lg text-gray-400">
+			<h2 className="text-3xl mt-4">Login</h2>
+			<p className="font-bold text-md md:text-lg text-gray-400 my-4">
 				Don't have an account?{" "}
 				<Link href="/register" className="text-blue-500 font-semibold">
 					Sign Up
 				</Link>
 			</p>
-			<div className="flex flex-col md:flex-col">
-				{/* <button onClick={handleGoogleLogin} className="flex items-center justify-center gap-2">
-					<GoogleIcon size={20} /> Login with Google
-				</button>
-				<button onClick={handleGithubLogin} className="flex items-center justify-center gap-2">
-					<GithubIcon size={20} />
-					Login with Github
-				</button> */}
+
+			<div className="flex flex-col items-center justify-center">
 				<button
 					type="button"
-					onClick={() => signIn("google", { callbackUrl: "/boards" })}
-					className="flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-blue-600 hover:text-white transition duration-200 cursor-pointer">
-					{/* <FcGoogle className="text-xl" /> */}
+					onClick={() => signIn("google", { callbackUrl: "/" })}
+					className="w-58 flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-blue-600 hover:text-white transition duration-200 cursor-pointer">
 					<GoogleIcon size={20} />
 					<span>Login in with Google</span>
 				</button>
@@ -55,22 +40,23 @@ export default function LoginForm() {
 					<span className="text-gray-500 text-sm">OR</span>
 					<hr className="flex-1 border-gray-300" />
 				</div>
+
 				<button
 					type="button"
-					onClick={() => signIn("google", { callbackUrl: "/boards" })}
-					className="flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-blue-600 hover:text-white transition duration-200 cursor-pointer">
-					{/* <FcGoogle className="text-xl" /> */}
+					onClick={() => signIn("github", { callbackUrl: "/" })}
+					className="w-58 flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2.5 text-gray-700 font-medium hover:bg-blue-600 hover:text-white transition duration-200 cursor-pointer">
 					<GithubIcon size={20} />
 					<span>Login in with Github</span>
 				</button>
 			</div>
-			<div className="flex flex-col gap-[-1]">
+
+			<div className="flex flex-col">
 				<label className="mb-3 mt-5 block font-medium" htmlFor="email">
 					Email
 				</label>
 				<div className="relative">
 					<input
-						className="peer block w-full rounded-md border border-gray-200 py-2.25 pl-10 outline-2 placeholder:text-gray-500"
+						className="w-full rounded-md border border-gray-300 py-2.25 pl-10 placeholder:text-gray-500"
 						id="email"
 						type="email"
 						name="email"
@@ -79,13 +65,13 @@ export default function LoginForm() {
 					<HiOutlineAtSymbol className="pointer-events-none absolute left-3 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
 				</div>
 			</div>
-			<div className="flex flex-col gap-[-1]">
+			<div className="flex flex-col">
 				<label className="mb-3 mt-5 block font-medium" htmlFor="password">
 					Password
 				</label>
 				<div className="relative flex items-center justify-center">
 					<input
-						className="w-full rounded-md border border-gray-100 py-2.25 pl-10 outline-2 placeholder:text-gray-500"
+						className="w-full rounded-md border border-gray-300 py-2.25 pl-10 placeholder:text-gray-500"
 						id="password"
 						type="password"
 						name="password"
@@ -96,7 +82,7 @@ export default function LoginForm() {
 				</div>
 			</div>
 			<input type="hidden" name="redirectTo" value={callbackUrl} />
-			<Button aria-disabled={isPending} type="submit" variant="success" className="">
+			<Button aria-disabled={isPending} type="submit" variant="success" className="mt-4 w-58">
 				{isPending ? "Submitting..." : "Login"}
 			</Button>
 			<div className="flex h-8 items-end space-x-1" aria-live="polite" aria-atomic="true">
